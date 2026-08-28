@@ -1,0 +1,22 @@
+diagnosis_id,diagnosis_name,parent_diagnosis_id,category_level
+ICD-1000,Respiratory System,NULL,1
+ICD-1100,Infectious Respiratory,ICD-1000,2
+ICD-1110,Acute Bronchitis,ICD-1100,3
+ICD-1120,Pneumonia,ICD-1100,3
+ICD-1200,Chronic Respiratory,ICD-1000,2
+ICD-1210,Asthma,ICD-1200,3
+ICD-1220,COPD,ICD-1200,3
+ICD-2000,Cardiovascular System,NULL,1
+ICD-2100,Ischemic Heart Disease,ICD-2000,2
+ICD-2110,Acute Myocardial Infarction,ICD-2100,3
+ICD-2120,Angina Pectoris,ICD-2100,3
+ICD-2200,Hypertensive Disease,ICD-2000,2
+ICD-2210,Essential Hypertension,ICD-2200,3
+ICD-3000,Digestive System,NULL,1
+ICD-3100,Gastrointestinal,ICD-3000,2
+ICD-3110,Gastritis,ICD-3100,3
+ICD-3120,Gastroenteritis,ICD-3100,3
+ICD-4000,Nervous System,NULL,1
+ICD-4100,Central Nervous System,ICD-4000,2
+ICD-4110,Migraine,ICD-4100,3
+ICD-4120,Epilepsy,ICD-4100,3
