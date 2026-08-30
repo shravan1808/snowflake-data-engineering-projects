@@ -1,3 +1,4 @@
+[
 {"encounter_id": "ENC-801", "patient_id": "PAT-10", "admit_date_key": 20260801, "discharge_date_key": 20260804, "billing_date_key": 20260806, "primary_diag_id": "ICD-1110", "total_cost": 4500.00},
 {"encounter_id": "ENC-802", "patient_id": "PAT-11", "admit_date_key": 20260801, "discharge_date_key": 20260805, "billing_date_key": 20260808, "primary_diag_id": "ICD-2110", "total_cost": 12000.00},
 {"encounter_id": "ENC-803", "patient_id": "PAT-12", "admit_date_key": 20260802, "discharge_date_key": 20260806, "billing_date_key": 20260809, "primary_diag_id": "ICD-1120", "total_cost": 3200.00},
@@ -18,3 +19,4 @@
 {"encounter_id": "ENC-818", "patient_id": "PAT-27", "admit_date_key": 20260813, "discharge_date_key": 20260818, "billing_date_key": 20260822, "primary_diag_id": "ICD-2120", "total_cost": 7900.00},
 {"encounter_id": "ENC-819", "patient_id": "PAT-28", "admit_date_key": 20260814, "discharge_date_key": 20260816, "billing_date_key": 20260819, "primary_diag_id": "ICD-4110", "total_cost": 1650.00},
 {"encounter_id": "ENC-820", "patient_id": "PAT-29", "admit_date_key": 20260815, "discharge_date_key": 20260820, "billing_date_key": 20260824, "primary_diag_id": "ICD-1220", "total_cost": 10200.00}
+]
