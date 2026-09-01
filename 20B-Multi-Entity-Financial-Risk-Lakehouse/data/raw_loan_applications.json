@@ -1,4 +1,4 @@
 [
-    {"app_id": "APP-9001", "customer_id": "CUST-501", "submitted_date": "2026-08-01", "underwritten_date": "2026-08-05", "approved_date": None, "disbursed_date": None, "loan_amount": 500000.00},
-    {"app_id": "APP-9002", "customer_id": "CUST-502", "submitted_date": "2026-08-03", "underwritten_date": "2026-08-07", "approved_date": "2026-08-10", "disbursed_date": None, "loan_amount": 250000.00}
+    {"app_id": "APP-9001", "customer_id": "CUST-501", "submitted_date": "2026-08-01", "underwritten_date": "2026-08-05", "approved_date": null, "disbursed_date": null, "loan_amount": 500000.00},
+    {"app_id": "APP-9002", "customer_id": "CUST-502", "submitted_date": "2026-08-03", "underwritten_date": "2026-08-07", "approved_date": "2026-08-10", "disbursed_date": null, "loan_amount": 250000.00}
 ]

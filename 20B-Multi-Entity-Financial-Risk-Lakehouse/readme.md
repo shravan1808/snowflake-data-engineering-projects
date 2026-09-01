@@ -1,13 +1,11 @@
 # WEEK 3: DATA MODELING DEEP DIVE & ENTERPRISE ARCHITECTURE
 
----
-
-## DAY 12: DIMENSIONAL DEEP DIVE (PROJECT 20B)
+## DAY 12: DIMENSIONAL DEEP DIVE
 
 ================================================================================
 PROJECT 20B: Multi-Entity Financial Risk Lakehouse — Snowflaking & Complex Fact Types
 ================================================================================
-Target Schedule: Week 3 — Day 12 
+Target Schedule: Week 3 — Day 12
 
 Target Topics: Factless Fact Tables, Accumulating Snapshot Facts, Outrigger Dimensions,
                 Normalized Snowflaking, Point-in-Time Risk Auditing
@@ -54,11 +52,25 @@ raw_ratings_kv = [
     {"rating_id": "RT-02", "agency": "Moody", "credit_score_band": "600-749", "risk_tier": "Medium Risk"}
 ]
 
+Branch Master Feed (`raw_branches_kv`):
+--------------------------------------
+raw_branches_kv = [
+    {"branch_id": "BR-10", "branch_name": "Downtown Commercial", "region": "North"},
+    {"branch_id": "BR-12", "branch_name": "Uptown Corporate", "region": "East"}
+]
+
 Customer Master Feed (`raw_customers_kv`):
 ------------------------------------------
 raw_customers_kv = [
     {"customer_id": "CUST-501", "customer_name": "Acme Corp", "rating_id": "RT-01", "branch_id": "BR-10"},
     {"customer_id": "CUST-502", "customer_name": "Apex Global", "rating_id": "RT-02", "branch_id": "BR-12"}
+]
+
+Facility Eligibility Feed (`raw_facilities_kv`):
+-----------------------------------------------
+raw_facilities_kv = [
+    {"customer_id": "CUST-501", "facility_id": "FAC-100", "eligibility_flag": True},
+    {"customer_id": "CUST-502", "facility_id": "FAC-200", "eligibility_flag": True}
 ]
 
 Loan Application Pipeline Feed (`raw_loan_applications_kv`):
@@ -79,18 +91,19 @@ cdc_loan_updates_kv = [
 --------------------------------------------------------------------------------
 
 TASK 1: Outrigger & Snowflaked Dimension Staging
-- Ingest credit ratings outrigger data into normalized staging structures.
+- Ingest credit ratings and branch structures into normalized staging structures.
 
 EXPECTED OUTPUT:
 +---------------+--------------+
 | STAGING_TABLE | RECORD_COUNT |
 +---------------+--------------+
 | STG_RATINGS   | 2            |
+| STG_BRANCHES  | 2            |
 +---------------+--------------+
 
 
 TASK 2: Factless Fact Table Construction
-- Build `FACT_CUSTOMER_FACILITY_ELIGIBILITY` to capture multi-entity relationship coverage without numeric metrics.
+- Build `FACT_CUSTOMER_FACILITY_ELIGIBILITY` using `raw_facilities_kv` to capture multi-entity relationship coverage without numeric metrics.
 
 EXPECTED OUTPUT:
 +-------------+-------------+------------------+
@@ -113,15 +126,16 @@ EXPECTED OUTPUT:
 +----------+-------------+----------------+-------------------+---------------+----------------+-------------+
 
 
-TASK 4: Outrigger Dimension Join Query
-- Execute join queries traversing `FACT_LOAN_APPLICATION_SNAPSHOT` -> `DIM_CUSTOMER` -> `DIM_OUTRIGGER_RATING`.
+TASK 4: Outrigger & Snowflaked Dimension Join Query
+- Execute join queries traversing `FACT_LOAN_APPLICATION_SNAPSHOT` -> `DIM_CUSTOMER` -> `DIM_BRANCH` and outrigger `DIM_OUTRIGGER_RATING`.
 
 EXPECTED OUTPUT:
-+----------+---------------+-------------------+-----------+-------------+
-| APP_ID   | CUSTOMER_NAME | CREDIT_SCORE_BAND | RISK_TIER | LOAN_AMOUNT |
-+----------+---------------+-------------------+-----------+-------------+
-| APP-9001 | Acme Corp     | 750-850           | Low Risk  | 500000.00   |
-+----------+---------------+-------------------+-----------+-------------+
++----------+---------------+---------------------+-------------------+-----------+-------------+
+| APP_ID   | CUSTOMER_NAME | BRANCH_NAME         | CREDIT_SCORE_BAND | RISK_TIER | LOAN_AMOUNT |
++----------+---------------+---------------------+-------------------+-----------+-------------+
+| APP-9001 | Acme Corp     | Downtown Commercial | 750-850           | Low Risk  | 500000.00   |
+| APP-9002 | Apex Global   | Uptown Corporate    | 600-749           | Med Risk  | 250000.00   |
++----------+---------------+---------------------+-------------------+-----------+-------------+
 
 
 TASK 5: Accumulating Snapshot Lifecycle MERGE
