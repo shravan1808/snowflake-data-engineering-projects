@@ -1,0 +1,4 @@
+[
+    {"customer_id": "CUST-501", "customer_name": "Acme Corp", "rating_id": "RT-01", "branch_id": "BR-10"},
+    {"customer_id": "CUST-502", "customer_name": "Apex Global", "rating_id": "RT-02", "branch_id": "BR-12"}
+]

@@ -1,0 +1,4 @@
+[
+    {"rating_id": "RT-01", "agency": "S&P", "credit_score_band": "750-850", "risk_tier": "Low Risk"},
+    {"rating_id": "RT-02", "agency": "Moody", "credit_score_band": "600-749", "risk_tier": "Medium Risk"}
+]
