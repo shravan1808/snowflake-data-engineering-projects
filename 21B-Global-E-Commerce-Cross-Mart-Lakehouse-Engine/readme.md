@@ -1,50 +1,61 @@
+-- =============================================================================
+-- PROJECT 21B: GLOBAL E-COMMERCE CROSS-MART LAKEHOUSE ENGINE (DAY 13)
+-- Target Engine: Dual-Engine (Databricks Delta Lake / PySpark & Snowflake SQL)
+-- =============================================================================
 
-================================================================================
-PROJECT 21B: Global E-Commerce Cross-Mart Lakehouse Engine (Hard)
-================================================================================
-Target Schedule: Week 3 — Day 13 (Topics M9–M10)
+-- -----------------------------------------------------------------------------
+-- 0. ENVIRONMENT SETUP & CONFORMED DIMENSIONS SEED
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS raw_clicks_stg (
+    click_id VARCHAR(50),
+    user_id VARCHAR(50),
+    sku VARCHAR(50),
+    action VARCHAR(50)
+);
 
-Target Topics: Multi-Source Stream Ingestion, Enterprise Bus Matrix Grain Balancing, 
-                Shared Conformed Surrogate Keys, Multi-Table CDC Stream Processing
+CREATE TABLE IF NOT EXISTS raw_orders_stg (
+    order_id VARCHAR(50) PRIMARY KEY,
+    user_id VARCHAR(50),
+    sku VARCHAR(50),
+    price DECIMAL(10, 2)
+);
 
-Target Platforms: Dual-Engine (Databricks Delta Lake / PySpark & Snowflake SQL)
+CREATE TABLE IF NOT EXISTS raw_returns_stg (
+    return_id VARCHAR(50) PRIMARY KEY,
+    order_id VARCHAR(50),
+    reason VARCHAR(100)
+);
 
---------------------------------------------------------------------------------
-1. ENGINE-SPECIFIC REQUIREMENTS & TECHNICAL ENVIRONMENT
---------------------------------------------------------------------------------
-* Task 1 Requirements (Multi-Source Engine Ingestion): Ingest raw clickstream logs, order receipts, and return records.
-* Task 2 Requirements (Bus Matrix Enterprise Mapping): Balance grain decisions across event-level clickstreams and line-item revenue marts.
-* Task 3 Requirements (Customer Conformed Dimension SK Generation): Construct shared customer surrogate keys (`user_sk`) for cross-mart consistency.
-* Task 4 Requirements (Cross-Mart Unified Return View): Build unified analytical views linking order receipts with return reasons.
-* Task 5 Requirements (Multi-Stream CDC MERGE Execution): Execute synchronized multi-table CDC updates using SQL `MERGE`.
-* Task 6 Requirements (Cross-Mart Completeness Audit): Audit cross-mart referential integrity to detect unmatched return transactions.
-* Task 7 Requirements (Multi-Engine Snapshot Audit): Query point-in-time point states across historical versions.
-* Task 8 Requirements (Non-Conformed Mart Clustering): Apply partition optimization and clustering across high-volume traffic facts.
+CREATE TABLE IF NOT EXISTS DIM_CUSTOMER_CONFORMED (
+    user_sk VARCHAR(50) PRIMARY KEY,
+    natural_usr_id VARCHAR(50),
+    conformed_status VARCHAR(20)
+);
 
---------------------------------------------------------------------------------
-2. INPUT DATASETS (KEY-VALUE PAIR FORMAT)
---------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS FACT_ORDERS_CDC (
+    order_id VARCHAR(50) PRIMARY KEY,
+    user_id VARCHAR(50),
+    price DECIMAL(10, 2)
+);
 
-Raw Clickstream Logs (`raw_clicks_kv`):
----------------------------------------
-raw_clicks_kv = [{"click_id": "CLK-90", "user_id": "USR-1", "sku": "SKU-A", "action": "view"}]
+-- Seed Conformed Customer Key
+INSERT INTO DIM_CUSTOMER_CONFORMED VALUES ('USR_SK_9001', 'USR-1', 'VERIFIED');
 
-Raw Orders Feed (`raw_orders_kv`):
-----------------------------------
-raw_orders_kv = [{"order_id": "ORD-50", "user_id": "USR-1", "sku": "SKU-A", "price": 49.99}]
+-- Seed Staging Raw Feed
+INSERT INTO raw_clicks_stg VALUES ('CLK-90', 'USR-1', 'SKU-A', 'view');
+INSERT INTO raw_orders_stg VALUES ('ORD-50', 'USR-1', 'SKU-A', 49.99);
+INSERT INTO raw_returns_stg VALUES ('RET-10', 'ORD-50', 'damaged');
 
-Raw Returns Feed (`raw_returns_kv`):
------------------------------------
-raw_returns_kv = [{"return_id": "RET-10", "order_id": "ORD-50", "reason": "damaged"}]
 
---------------------------------------------------------------------------------
-3. TASKS & EXPECTED OUTPUTS
---------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- TASK 1: Multi-Source Engine Ingestion
+-- Parse and load multi-channel streaming sources into staging.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-TASK 1: Multi-Source Engine Ingestion
-- Parse and load multi-channel streaming sources into staging.
 
-EXPECTED OUTPUT:
+
+/* EXPECTED OUTPUT TASK 1:
 +---------------+------------------+
 | SOURCE_STREAM | RECORDS_PARSED   |
 +---------------+------------------+
@@ -52,81 +63,125 @@ EXPECTED OUTPUT:
 | ORDERS        | 1                |
 | RETURNS       | 1                |
 +---------------+------------------+
+*/
 
 
-TASK 2: Bus Matrix Enterprise Mapping
-- Verify bus matrix grain alignment and domain ownership.
+-- -----------------------------------------------------------------------------
+-- TASK 2: Bus Matrix Enterprise Mapping
+-- Verify bus matrix grain alignment and domain ownership.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-EXPECTED OUTPUT:
+
+
+/* EXPECTED OUTPUT TASK 2:
 +-------------+-----------------+---------------+--------------+
 | PROCESS     | CONFORMED_USR   | GRAIN_LEVEL   | MART_OWNER   |
 +-------------+-----------------+---------------+--------------+
 | Clickstream | YES             | Event-Level   | Traffic Mart |
 | Orders      | YES             | Line-Item     | Revenue Mart |
 +-------------+-----------------+---------------+--------------+
+*/
 
 
-TASK 3: Customer Conformed Dimension SK Generation
-- Generate unified surrogate keys for conformed customer entities.
+-- -----------------------------------------------------------------------------
+-- TASK 3: Customer Conformed Dimension SK Generation
+-- Generate unified surrogate keys for conformed customer entities.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-EXPECTED OUTPUT:
+
+
+/* EXPECTED OUTPUT TASK 3:
 +-------------+----------------+--------------------+
 | USER_SK     | NATURAL_USR_ID | CONFORMED_STATUS   |
 +-------------+----------------+--------------------+
 | USR_SK_9001 | USR-1          | VERIFIED           |
 +-------------+----------------+--------------------+
+*/
 
 
-TASK 4: Cross-Mart Unified Return View
-- Construct unified views combining order metrics and return metadata.
+-- -----------------------------------------------------------------------------
+-- TASK 4: Cross-Mart Unified Return View
+-- Construct unified views combining order metrics and return metadata.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-EXPECTED OUTPUT:
+
+
+/* EXPECTED OUTPUT TASK 4:
 +----------+-------------+-------+----------+---------+
 | ORDER_ID | USER_SK     | PRICE | RETURNED | REASON  |
 +----------+-------------+-------+----------+---------+
 | ORD-50   | USR_SK_9001 | 49.99 | YES      | damaged |
 +----------+-------------+-------+----------+---------+
+*/
 
 
-TASK 5: Multi-Stream CDC MERGE Execution
-- Execute atomic CDC updates across interdependent streaming tables.
+-- -----------------------------------------------------------------------------
+-- TASK 5: Multi-Stream CDC MERGE Execution
+-- STUDENT INSTRUCTION: Execute an atomic MERGE to upsert incoming CDC order records 
+-- from raw_orders_stg into FACT_ORDERS_CDC for order_id = 'ORD-50'.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-EXPECTED OUTPUT:
+
+
+/* EXPECTED OUTPUT TASK 5:
 +---------------+--------------+
 | ROWS_INSERTED | ROWS_UPDATED |
 +---------------+--------------+
-| 1             | 1            |
+| 1             | 0            |
 +---------------+--------------+
+*/
 
 
-TASK 6: Cross-Mart Completeness Audit
-- Audit cross-mart joins to ensure zero unmatched return records.
+-- -----------------------------------------------------------------------------
+-- TASK 6: Cross-Mart Completeness Audit
+-- Audit cross-mart joins to ensure zero unmatched return records.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-EXPECTED OUTPUT:
+
+
+/* EXPECTED OUTPUT TASK 6:
 +--------------------+-------------+
 | AUDIT_CHECK        | PASS_STATUS |
 +--------------------+-------------+
 | UNMATCHED_RETURNS  | 0           |
 +--------------------+-------------+
+*/
 
 
-TASK 7: Multi-Engine Snapshot Audit
-- Verify order records via historical time travel query execution.
+-- -----------------------------------------------------------------------------
+-- TASK 7: Multi-Engine Snapshot Audit
+-- Verify order records via historical time travel query execution.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-EXPECTED OUTPUT:
+
+
+/* EXPECTED OUTPUT TASK 7:
 +----------+-------+
 | ORDER_ID | PRICE |
 +----------+-------+
 | ORD-50   | 49.99 |
 +----------+-------+
+*/
 
 
-TASK 8: Non-Conformed Mart Clustering
-- Optimize physical table storage layout for high-throughput clickstream facts.
+-- -----------------------------------------------------------------------------
+-- TASK 8: Non-Conformed Mart Clustering
+-- Optimize physical table storage layout for high-throughput clickstream facts.
+-- -----------------------------------------------------------------------------
+-- TODO: WRITE YOUR QUERY HERE
 
-EXPECTED OUTPUT:
+
+
+/* EXPECTED OUTPUT TASK 8:
 +------------------+---------------------+
 | MART_TABLE       | OPTIMIZATION_RESULT |
 +------------------+---------------------+
 | FACT_CLICKSTREAM | SUCCESS             |
 +------------------+---------------------+
+*/
