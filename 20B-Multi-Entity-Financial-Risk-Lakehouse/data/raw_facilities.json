@@ -1,4 +1,4 @@
 [
-    {"customer_id": "CUST-501", "facility_id": "FAC-100", "eligibility_flag": true},
-    {"customer_id": "CUST-502", "facility_id": "FAC-200", "eligibility_flag": true}
+    {"customer_id": "CUST-501", "facility_id": "FAC-100", "eligibility_flag": TRUE},
+    {"customer_id": "CUST-502", "facility_id": "FAC-200", "eligibility_flag": TRUE}
 ]

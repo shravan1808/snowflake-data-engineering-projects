@@ -1,0 +1,4 @@
+[
+    {"po_id": "PO-9001", "supplier_id": "SUP-77", "amount_local": 150000.00, "currency": "EUR", "po_date": "2026-08-10"},
+    {"po_id": "PO-9002", "supplier_id": "SUP-88", "amount_local": 2500000.00, "currency": "JPY", "po_date": "2026-08-12"}
+]
