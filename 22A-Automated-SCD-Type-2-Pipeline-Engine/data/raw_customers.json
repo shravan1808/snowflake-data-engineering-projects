@@ -1,0 +1,7 @@
+[ 
+  {"customer_id": "CUST-101", "name": "Alice Smith", "address": "123 Main St, Austin, TX", "tier": "Gold", "phone": "512-555-0199", "effective_date": "2026-08-15"}, 
+{"customer_id": "CUST-102", "name": "Bob Jones", "address": "456 Oak Rd, Seattle, WA", "tier": "Silver", "phone": "206-555-0144", "effective_date": "2026-08-15"}, 
+{"customer_id": "CUST-103", "name": "Carol Danvers", "address": "789 Pine Ave, Chicago, IL", "tier": "Platinum", "phone": "312-555-0177", "effective_date": "2026-08-15"}, 
+{"customer_id": "CUST-104", "name": "David Miller", "address": "101 Maple Dr, Miami, FL", "tier": "Bronze", "phone": "305-555-0122", "effective_date": "2026-08-15"}, 
+{"customer_id": "CUST-105", "name": "Eva Green", "address": "202 Birch Ln, Denver, CO", "tier": "Gold", "phone": "303-555-0188", "effective_date": "2026-08-15"} 
+]
