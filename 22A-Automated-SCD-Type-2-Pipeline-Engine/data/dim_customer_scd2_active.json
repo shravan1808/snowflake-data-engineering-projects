@@ -1,5 +1,5 @@
 [ 
- {"customer_sk": "SK-1001", "customer_id": "CUST-101", "name": "Alice Smith", "address": "789 Pine St, Dallas, TX", "tier": "Bronze", "phone": "512-555-0100", "start_date": "2026-01-01", "end_date": "9999-12-31", "is_current": True}, 
- {"customer_sk": "SK-1002", "customer_id": "CUST-102", "name": "Bob Jones", "address": "456 Oak Rd, Seattle, WA", "tier": "Silver", "phone": "206-555-0144", "start_date": "2026-02-10", "end_date": "9999-12-31", "is_current": True}, 
- {"customer_sk": "SK-1004", "customer_id": "CUST-104", "name": "David Miller", "address": "101 Maple Dr, Miami, FL", "tier": "Bronze", "phone": "305-555-0111", "start_date": "2026-03-15", "end_date": "9999-12-31", "is_current": True} 
+ {"customer_sk": "SK-1001", "customer_id": "CUST-101", "name": "Alice Smith", "address": "789 Pine St, Dallas, TX", "tier": "Bronze", "phone": "512-555-0100", "start_date": "2026-01-01", "end_date": "9999-12-31", "is_current": true}, 
+ {"customer_sk": "SK-1002", "customer_id": "CUST-102", "name": "Bob Jones", "address": "456 Oak Rd, Seattle, WA", "tier": "Silver", "phone": "206-555-0144", "start_date": "2026-02-10", "end_date": "9999-12-31", "is_current": true}, 
+ {"customer_sk": "SK-1004", "customer_id": "CUST-104", "name": "David Miller", "address": "101 Maple Dr, Miami, FL", "tier": "Bronze", "phone": "305-555-0111", "start_date": "2026-03-15", "end_date": "9999-12-31", "is_current": true} 
  ]
