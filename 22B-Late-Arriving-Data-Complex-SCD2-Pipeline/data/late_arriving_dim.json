@@ -1,0 +1,5 @@
+[
+    {"customer_id": "CUST-999", "customer_name": "Robert Chen", "segment": "VIP", "effective_date": "2026-07-15"},
+    {"customer_id": "CUST-888", "customer_name": "Sophia Patel", "segment": "Enterprise", "effective_date": "2026-07-20"},
+    {"customer_id": "CUST-777", "customer_name": "Marcus Vance", "segment": "SMB", "effective_date": "2026-07-25"}
+]
