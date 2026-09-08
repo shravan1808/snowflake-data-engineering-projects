@@ -1,0 +1,390 @@
+USE WAREHOUSE SNOWFLAKE_LEARNING_WH;
+
+CREATE DATABASE IF NOT EXISTS ENTERPRISE_DW; 
+
+USE DATABASE ENTERPRISE_DW; 
+
+CREATE SCHEMA IF NOT EXISTS RETAIL_MART; 
+
+USE SCHEMA RETAIL_MART;
+
+CREATE OR REPLACE TABLE DIM_DATE 
+(
+date_sk INT PRIMARY KEY, 
+full_date DATE NOT NULL, 
+year INT NOT NULL, 
+quarter INT NOT NULL, 
+month INT NOT NULL, 
+month_name VARCHAR(10) NOT NULL, 
+day_of_week VARCHAR(10) NOT NULL, 
+is_weekend BOOLEAN NOT NULL, 
+is_holiday BOOLEAN NOT NULL 
+);
+
+CREATE OR REPLACE TABLE DIM_CUSTOMER 
+(
+customer_sk INT PRIMARY KEY, 
+customer_id VARCHAR(20) NOT NULL, 
+customer_name VARCHAR(100) NOT NULL,
+email VARCHAR(100) NOT NULL, 
+tier VARCHAR(20) NOT NULL, 
+city VARCHAR(50) NOT NULL, 
+effective_start_timestamp TIMESTAMP_NTZ NOT NULL, 
+effective_end_timestamp TIMESTAMP_NTZ, 
+is_current BOOLEAN NOT NULL 
+);
+
+CREATE OR REPLACE TABLE DIM_PRODUCT 
+(
+product_sk INT PRIMARY KEY, 
+product_id VARCHAR(20) NOT NULL, 
+product_name VARCHAR(100) NOT NULL, 
+category_name VARCHAR(50) NOT NULL, 
+department_name VARCHAR(50) NOT NULL, 
+unit_cost DECIMAL(10, 2) NOT NULL 
+);
+
+CREATE OR REPLACE TABLE FACT_SALES 
+(
+sales_sk INT PRIMARY KEY, 
+order_id VARCHAR(20) NOT NULL, -- Degenerate Dimension 
+customer_sk INT REFERENCES DIM_CUSTOMER(customer_sk), 
+product_sk INT REFERENCES DIM_PRODUCT(product_sk), 
+order_date_sk INT REFERENCES DIM_DATE(date_sk), -- Role Playing 1 
+ship_date_sk INT REFERENCES DIM_DATE(date_sk), -- Role Playing 2 
+quantity INT NOT NULL, -- Additive Measure 
+revenue DECIMAL(12, 2) NOT NULL -- Additive Measure 
+);
+
+CREATE OR REPLACE TABLE FACT_MONTHLY_INVENTORY 
+(
+snapshot_sk INT PRIMARY KEY, 
+snapshot_date_sk INT REFERENCES DIM_DATE(date_sk),
+product_sk INT REFERENCES DIM_PRODUCT(product_sk), 
+starting_stock_qty INT NOT NULL, -- Semi-Additive 
+ending_stock_qty INT NOT NULL, -- Semi-Additive 
+restock_qty INT NOT NULL -- Additive 
+);
+
+CREATE OR REPLACE TABLE FACT_PROMOTION_COVERAGE 
+(
+coverage_sk INT PRIMARY KEY, 
+product_sk INT REFERENCES DIM_PRODUCT(product_sk), 
+date_sk INT REFERENCES DIM_DATE(date_sk), 
+promotion_code VARCHAR(30) NOT NULL 
+);
+
+
+INSERT INTO DIM_DATE 
+VALUES 
+(20260101, '2026-01-01', 2026, 1, 1, 'January', 'Thursday', FALSE, TRUE), 
+(20260102, '2026-01-02', 2026, 1, 1, 'January', 'Friday', FALSE, FALSE), 
+(20260103, '2026-01-03', 2026, 1, 1, 'January', 'Saturday', TRUE, FALSE), 
+(20260104, '2026-01-04', 2026, 1, 1, 'January', 'Sunday', TRUE, FALSE), 
+(20260105, '2026-01-05', 2026, 1, 1, 'January', 'Monday', FALSE, FALSE), 
+(20260106, '2026-01-06', 2026, 1, 1, 'January', 'Tuesday', FALSE, FALSE), 
+(20260107, '2026-01-07', 2026, 1, 1, 'January', 'Wednesday', FALSE, FALSE), 
+(20260108, '2026-01-08', 2026, 1, 1, 'January', 'Thursday', FALSE, FALSE), 
+(20260109, '2026-01-09', 2026, 1, 1, 'January', 'Friday', FALSE, FALSE), 
+(20260110, '2026-01-10', 2026, 1, 1, 'January', 'Saturday', TRUE, FALSE), 
+(20260111, '2026-01-11', 2026, 1, 1, 'January', 'Sunday', TRUE, FALSE), 
+(20260112, '2026-01-12', 2026, 1, 1, 'January', 'Monday', FALSE, FALSE), 
+(20260113, '2026-01-13', 2026, 1, 1, 'January', 'Tuesday', FALSE, FALSE), 
+(20260114, '2026-01-14', 2026, 1, 1, 'January', 'Wednesday', FALSE, FALSE), 
+(20260115, '2026-01-15', 2026, 1, 1, 'January', 'Thursday', FALSE, FALSE), 
+(20260116, '2026-01-16', 2026, 1, 1, 'January', 'Friday', FALSE, FALSE), 
+(20260117, '2026-01-17', 2026, 1, 1, 'January', 'Saturday', TRUE, FALSE), 
+(20260118, '2026-01-18', 2026, 1, 1, 'January', 'Sunday', TRUE, FALSE), 
+(20260119, '2026-01-19', 2026, 1, 1, 'January', 'Monday', FALSE, FALSE), 
+(20260120, '2026-01-20', 2026, 1, 1, 'January', 'Tuesday', FALSE, FALSE);
+
+-- Populate 2. DIM_CUSTOMER (20 Records - Includes Inferred Key -1 and SCD2 historical records) 
+INSERT INTO DIM_CUSTOMER 
+VALUES 
+(-1, 'CUST-000', 'Inferred Member', 'unknown@domain.com', 'None', 'Unknown', '2020-01-01 00:00:00', NULL, TRUE), 
+(101, 'CUST-001', 'Alice Smith', 'alice@gmail.com', 'Gold', 'New York', '2025-01-01 00:00:00', '2026-01-05 00:00:00', FALSE), 
+(102, 'CUST-001', 'Alice Smith', 'alice_new@gmail.com', 'Platinum', 'New York', '2026-01-05 00:00:00', NULL, TRUE), 
+(103, 'CUST-002', 'Bob Jones', 'bob@yahoo.com', 'Silver', 'Chicago', '2025-06-01 00:00:00', NULL, TRUE),
+(104, 'CUST-003', 'Charlie Brown', 'charlie@hotmail.com', 'Bronze', 'Houston', '2025-08-15 00:00:00', NULL, TRUE), 
+(105, 'CUST-004', 'Diana Prince', 'diana@amazon.com', 'Platinum', 'Seattle', '2025-02-10 00:00:00', NULL, TRUE),
+(106, 'CUST-005', 'Evan Wright', 'evan@tech.com', 'Silver', 'Boston', '2025-11-20 00:00:00', NULL, TRUE), 
+(107, 'CUST-006', 'Fiona Gallagher', 'fiona@chicago.gov', 'Gold', 'Chicago', '2025-04-12 00:00:00', NULL, TRUE), 
+(108, 'CUST-007', 'George Clark', 'george@clark.org', 'Bronze', 'Denver', '2025-09-01 00:00:00', NULL, TRUE),
+(109, 'CUST-008', 'Hannah Abbott', 'hannah@hogwarts.edu', 'Gold', 'Austin', '2025-03-30 00:00:00', NULL, TRUE), 
+(110, 'CUST-009', 'Ian Malcolm', 'ian@dino.com', 'Platinum', 'Dallas', '2025-07-07 00:00:00', NULL, TRUE),
+(111, 'CUST-010', 'Julia Roberts', 'julia@cinema.com', 'Silver', 'Los Angeles', '2025-10-15 00:00:00', NULL, TRUE),
+(112, 'CUST-011', 'Kevin Bacon', 'kevin@actor.com', 'Gold', 'Philadelphia', '2025-12-01 00:00:00', NULL, TRUE), 
+(113, 'CUST-012', 'Laura Croft', 'laura@tomb.org', 'Platinum', 'San Francisco', '2025-01-20 00:00:00', NULL, TRUE), 
+(114, 'CUST-013', 'Michael Scott', 'michael@paper.com', 'Bronze', 'Scranton', '2025-05-05 00:00:00', NULL, TRUE), 
+(115, 'CUST-014', 'Nancy Drew', 'nancy@detective.com', 'Silver', 'River Heights', '2025-06-18 00:00:00', NULL, TRUE), 
+(116, 'CUST-015', 'Oscar Martinez', 'oscar@accounting.com', 'Gold', 'Scranton', '2025-08-22 00:00:00', NULL, TRUE), 
+(117, 'CUST-016', 'Pam Beesly', 'pam@art.com', 'Silver', 'Scranton', '2025-09-14 00:00:00', NULL, TRUE), 
+(118, 'CUST-017', 'Quentin Tarantino', 'quentin@film.com', 'Platinum', 'Los Angeles', '2025-10-01 00:00:00', NULL, TRUE), 
+(119, 'CUST-018', 'Rachel Green', 'rachel@fashion.com', 'Gold', 'New York', '2025-11-11 00:00:00', NULL, TRUE), 
+(120, 'CUST-019', 'Steve Rogers', 'steve@shield.gov', 'Platinum', 'Brooklyn', '2025-01-01 00:00:00', NULL, TRUE);
+
+-- Populate 3. DIM_PRODUCT (20 Records) 
+INSERT INTO DIM_PRODUCT 
+VALUES 
+(201, 'PRD-101', '4K Smart Monitor 27in', 'Monitors', 'Electronics', 250.00),
+(202, 'PRD-102', 'Ergonomic Mechanical Keyboard', 'Accessories', 'Electronics', 75.00), (203, 'PRD-103', 'Wireless Gaming Mouse', 'Accessories', 'Electronics', 40.00), 
+(204, 'PRD-104', 'USB-C Docking Station', 'Accessories', 'Electronics', 90.00), 
+(205, 'PRD-105', 'Noise-Canceling Headphones', 'Audio', 'Electronics', 180.00), 
+(206, 'PRD-106', 'Standing Desk Converter', 'Furniture', 'Office Supplies', 150.00), 
+(207, 'PRD-107', 'Mesh Office Chair', 'Furniture', 'Office Supplies', 200.00), 
+(208, 'PRD-108', 'LED Desk Lamp', 'Lighting', 'Office Supplies', 25.00), 
+(209, 'PRD-109', 'HD Web Camera 1080p', 'Audio & Video', 'Electronics', 50.00), 
+(210, 'PRD-110', 'External SSD 1TB', 'Storage', 'Electronics', 85.00), 
+(211, 'PRD-111', 'Bluetooth Soundbar', 'Audio', 'Electronics', 110.00), 
+(212, 'PRD-112', 'Paper Shredder Cross-Cut', 'Equipment', 'Office Supplies', 60.00), 
+(213, 'PRD-113', 'Laser Printer Monochrome', 'Printers', 'Office Supplies', 190.00), 
+(214, 'PRD-114', 'Surge Protector Tower', 'Power', 'Electronics', 30.00), 
+(215, 'PRD-115', 'Ergonomic Footrest', 'Furniture', 'Office Supplies', 35.00), 
+(216, 'PRD-116', 'Wireless Charger Pad', 'Accessories', 'Electronics', 20.00), 
+(217, 'PRD-117', 'Thermal Label Printer', 'Printers', 'Office Supplies', 130.00), 
+(218, 'PRD-118', 'Laptop Sleeve 15in', 'Accessories', 'Electronics', 18.00), 
+(219, 'PRD-119', 'Blue Light Glasses', 'Apparel', 'Personal', 22.00), 
+(220, 'PRD-120', 'Cable Management Box', 'Accessories', 'Office Supplies', 15.00);
+
+-- Populate 4. FACT_SALES (20 Records) 
+INSERT INTO FACT_SALES
+VALUES 
+(1, 'ORD-9001', 102, 201, 20260101, 20260103, 1, 399.99), 
+(2, 'ORD-9001', 102, 202, 20260101, 20260103, 2, 240.00), 
+(3, 'ORD-9002', 103, 205, 20260102, 20260104, 1, 299.99), 
+(4, 'ORD-9003', 104, 203, 20260102, 20260105, 3, 180.00), 
+(5, 'ORD-9004', 105, 207, 20260103, 20260106, 1, 350.00), 
+(6, 'ORD-9005', 106, 210, 20260104, 20260107, 2, 260.00), 
+(7, 'ORD-9006', 107, 204, 20260105, 20260108, 1, 140.00), 
+(8, 'ORD-9007', 108, 208, 20260105, 20260107, 4, 160.00), 
+(9, 'ORD-9008', 109, 206, 20260106, 20260109, 1, 250.00), 
+(10, 'ORD-9009', 110, 213, 20260107, 20260110, 1, 299.00), 
+(11, 'ORD-9010', 111, 209, 20260108, 20260111, 2, 160.00), 
+(12, 'ORD-9011', 112, 211, 20260109, 20260112, 1, 180.00), 
+(13, 'ORD-9012', 113, 214, 20260110, 20260112, 5, 225.00), 
+(14, 'ORD-9013', 114, 212, 20260111, 20260114, 1, 95.00), 
+(15, 'ORD-9014', 115, 215, 20260112, 20260115, 2, 110.00), 
+(16, 'ORD-9015', 116, 216, 20260113, 20260116, 3, 90.00), 
+(17, 'ORD-9016', 117, 217, 20260114, 20260117, 1, 210.00), 
+(18, 'ORD-9017', 118, 218, 20260115, 20260118, 2, 50.00), 
+(19, 'ORD-9018', 119, 219, 20260116, 20260119, 2, 70.00), 
+(20, 'ORD-9019', 120, 220, 20260117, 20260120, 4, 100.00);
+
+-- Populate 5. FACT_MONTHLY_INVENTORY (20 Records) 
+INSERT INTO FACT_MONTHLY_INVENTORY 
+VALUES 
+(1, 20260101, 201, 50, 35, 0), 
+(2, 20260101, 202, 100, 80, 20), 
+(3, 20260101, 203, 120, 95, 0), 
+(4, 20260101, 204, 40, 22, 10), 
+(5, 20260101, 205, 30, 15, 0), 
+(6, 20260101, 206, 25, 10, 5), 
+(7, 20260101, 207, 15, 8, 0), 
+(8, 20260101, 208, 200, 150, 50), 
+(9, 20260101, 209, 80, 60, 0), 
+(10, 20260101, 210, 90, 70, 15), 
+(11, 20260101, 211, 45, 30, 0), 
+(12, 20260101, 212, 35, 25, 0), 
+(13, 20260101, 213, 20, 12, 10), 
+(14, 20260101, 214, 150, 110, 0), 
+(15, 20260101, 215, 60, 48, 0), 
+(16, 20260101, 216, 110, 85, 25), 
+(17, 20260101, 217, 25, 18, 0), 
+(18, 20260101, 218, 95, 80, 0), 
+(19, 20260101, 219, 70, 50, 10), 
+(20, 20260101, 220, 130, 100, 0);
+
+-- Populate 6. FACT_PROMOTION_COVERAGE (20 Records) 
+INSERT INTO FACT_PROMOTION_COVERAGE 
+VALUES 
+(1, 201, 20260101, 'NEWYEAR_2026'),
+(2, 202, 20260101, 'NEWYEAR_2026'),
+(3, 203, 20260102, 'TECH_DEALS'), 
+(4, 204, 20260102, 'TECH_DEALS'),
+(5, 205, 20260103, 'AUDIO_MANIA'), 
+(6, 206, 20260104, 'OFFICE_REFRESH'),
+(7, 207, 20260105, 'OFFICE_REFRESH'),
+(8, 208, 20260105, 'LIGHTING_SALE'), 
+(9, 209, 20260106, 'WORK_FROM_HOME'),
+(10, 210, 20260107, 'STORAGE_BLOWOUT'),
+(11, 211, 20260108, 'AUDIO_MANIA'), 
+(12, 212, 20260109, 'OFFICE_REFRESH'),
+(13, 213, 20260110, 'TECH_DEALS'),
+(14, 214, 20260111, 'POWER_SAVINGS'),
+(15, 215, 20260112, 'ERGONOMIC_COMFORT'), 
+(16, 216, 20260113, 'TECH_DEALS'), 
+(17, 217, 20260114, 'OFFICE_REFRESH'),
+(18, 218, 20260115, 'ACCESSORY_SPECIAL'),
+(19, 219, 20260116, 'HEALTH_WELLNESS'), 
+(20, 220, 20260117, 'ORGANIZATION_SALE');
+
+
+SELECT  DT.FULL_DATE AS ORDER_DATE,
+        DTE.FULL_DATE AS SHIP_DATE,
+        SUM(FCT.REVENUE) AS REVENUE
+FROM FACT_SALES FCT
+JOIN DIM_DATE DT
+ON FCT.ORDER_DATE_SK = DT.DATE_SK
+JOIN DIM_DATE DTE
+ON FCT.SHIP_DATE_SK = DTE.DATE_SK
+GROUP BY DT.FULL_DATE,DTE.FULL_DATE
+ORDER BY ORDER_DATE,SHIP_DATE;
+
+
+SELECT  SUM(QUANTITY) AS TOTAL_UNITS_SOLD,
+        SUM(REVENUE) AS TOTAL_REVENUE,
+        AVG(REVENUE) AS AVG_LINE_REVENUE
+FROM FACT_SALES;
+
+SELECT  DP.PRODUCT_NAME,
+        DT.FULL_DATE AS SNAPSHOT_DATE,
+        FMI.ENDING_STOCK_QTY
+FROM FACT_MONTHLY_INVENTORY FMI
+JOIN DIM_PRODUCT DP
+ON FMI.PRODUCT_SK = DP.PRODUCT_SK
+JOIN DIM_DATE DT
+ON DT.DATE_SK= FMI.SNAPSHOT_DATE_SK;
+
+SELECT  DP.PRODUCT_NAME,
+        FPC.PROMOTION_CODE,
+        DT.FULL_DATE
+FROM FACT_PROMOTION_COVERAGE FPC
+JOIN DIM_PRODUCT DP
+ON FPC.PRODUCT_SK = DP.PRODUCT_SK
+JOIN DIM_DATE DT
+ON DT.DATE_SK = FPC.DATE_SK;
+
+SELECT  FCT.ORDER_ID,
+        COUNT(FCT.ORDER_ID) AS LINE_ITEM_COUNT,
+        SUM(FCT.REVENUE) AS ORDER_TOTAL_REVENUE
+FROM FACT_SALES FCT
+GROUP BY FCT.ORDER_ID
+ORDER BY FCT.ORDER_ID;
+
+SELECT  DP.DEPARTMENT_NAME,
+        DP.CATEGORY_NAME,
+        DP.PRODUCT_NAME,
+        SUM(FCT.REVENUE) AS REVENUE
+FROM DIM_PRODUCT DP
+LEFT JOIN FACT_SALES FCT
+ON FCT.PRODUCT_SK = DP.PRODUCT_SK
+GROUP BY ROLLUP(DP.DEPARTMENT_NAME,DP.CATEGORY_NAME,DP.PRODUCT_NAME)
+ORDER BY DEPARTMENT_NAME,CATEGORY_NAME,PRODUCT_NAME;
+
+SELECT  DC.CUSTOMER_ID,
+        DC.CUSTOMER_NAME,
+        DC.EMAIL,
+        DC.TIER,
+        DC.IS_CURRENT
+FROM DIM_CUSTOMER DC
+WHERE DC.IS_CURRENT = TRUE AND DC.CUSTOMER_SK > 0;
+
+SELECT  FCT.ORDER_ID,
+        DC.CUSTOMER_NAME,
+        DC.EMAIL AS EMAIL_AT_PURCHASE_TIME,
+        FCT.REVENUE
+FROM FACT_SALES FCT
+JOIN DIM_CUSTOMER DC
+ON FCT.CUSTOMER_SK = DC.CUSTOMER_SK
+WHERE DC.IS_CURRENT = TRUE AND DC.CUSTOMER_SK > 0
+ORDER BY FCT.ORDER_ID;
+
+SELECT  FCT.ORDER_ID,
+        DC.CUSTOMER_NAME,
+        FCT.REVENUE
+FROM FACT_SALES FCT
+LEFT JOIN DIM_CUSTOMER DC
+ON FCT.CUSTOMER_SK = DC.CUSTOMER_SK
+WHERE DC.CUSTOMER_SK IS NULL;
+
+SELECT  DT.YEAR,
+        DT.MONTH_NAME,
+        DP.DEPARTMENT_NAME,
+        SUM(FCT.REVENUE) AS GROSS_REVENUE,
+        SUM(DP.UNIT_COST*FCT.QUANTITY) AS TOTAL_COST,
+        SUM(FCT.REVENUE)-SUM(DP.UNIT_COST*FCT.QUANTITY) AS NET_PROFIT
+FROM FACT_SALES FCT
+JOIN DIM_DATE DT
+ON FCT.ORDER_DATE_SK=DT.DATE_SK
+JOIN DIM_PRODUCT DP
+ON FCT.PRODUCT_SK=DP.PRODUCT_SK
+GROUP BY DT.YEAR,DT.MONTH_NAME,DP.DEPARTMENT_NAME
+ORDER BY DP.DEPARTMENT_NAME;
+
+SELECT  DP.PRODUCT_NAME,
+        FCT.REVENUE AS TOTAL_SALES_REVENUE,
+        FMI.ENDING_STOCK_QTY AS LATEST_STOCK_LEVEL
+FROM FACT_SALES FCT
+JOIN DIM_PRODUCT DP
+ON FCT.PRODUCT_SK = DP.PRODUCT_SK
+JOIN FACT_MONTHLY_INVENTORY FMI
+ON FMI.PRODUCT_SK = DP.PRODUCT_SK;
+
+SELECT  DC.CUSTOMER_ID,
+        DC.CUSTOMER_NAME,
+        COUNT(*) AS FREQUENCY,
+        SUM(FCT.REVENUE) AS MONETARY_VALUE
+FROM FACT_SALES FCT
+LEFT JOIN DIM_CUSTOMER DC
+ON FCT.CUSTOMER_SK = DC.CUSTOMER_SK
+WHERE DC.IS_CURRENT = TRUE AND DC.CUSTOMER_ID IS NOT NULL
+GROUP BY DC.CUSTOMER_ID,DC.CUSTOMER_NAME
+ORDER BY CUSTOMER_ID;
+
+SELECT  FCT.SALES_SK,
+        FCT.PRODUCT_SK
+FROM FACT_SALES FCT
+LEFT JOIN DIM_PRODUCT DP
+ON FCT.PRODUCT_SK = DP.PRODUCT_SK
+WHERE DP.PRODUCT_SK IS NULL;
+
+SELECT *
+FROM DIM_CUSTOMER;
+
+MERGE INTO DIM_CUSTOMER TAR
+USING (SELECT 'CUST-002' AS CUSTOMER_ID,'Silver' AS TIER,FALSE AS IS_CURRENT,TO_TIMESTAMP('2026-09-01 12:42:19.000') AS EFFECTIVE_END_TIMESTAMP) SRC
+ON TAR.CUSTOMER_ID = SRC.CUSTOMER_ID AND TAR.IS_CURRENT = TRUE
+WHEN MATCHED THEN
+    UPDATE 
+        SET TAR.EFFECTIVE_END_TIMESTAMP = SRC.EFFECTIVE_END_TIMESTAMP,
+            TAR.IS_CURRENT = SRC.IS_CURRENT;
+            
+INSERT INTO DIM_CUSTOMER(CUSTOMER_SK,
+                         CUSTOMER_ID,
+                         CUSTOMER_NAME,
+                         EMAIL,
+                         TIER,
+                         CITY,
+                         EFFECTIVE_START_TIMESTAMP,
+                         EFFECTIVE_END_TIMESTAMP,
+                         IS_CURRENT)
+VALUES (121,'CUST-002','Bob Jones','bob@yahoo.com','Gold','Chicago',TO_TIMESTAMP('2026-09-01 12:42:19.000'),NULL,TRUE);
+
+SELECT  TABLE_NAME,
+        ROW_COUNT
+FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES
+WHERE TABLE_SCHEMA='RETAIL_MART';
+
+SELECT 'DIM_DATE' AS TABLE_NAME,
+        COUNT(*) AS RECORD_COUNT
+FROM DIM_DATE
+UNION ALL
+SELECT 'DIM_CUSTOMER' AS TABLE_NAME,
+        COUNT(*) AS RECORD_COUNT
+FROM DIM_CUSTOMER
+UNION ALL
+SELECT 'DIM_PRODUCT' AS TABLE_NAME,
+        COUNT(*) AS RECORD_COUNT
+FROM DIM_PRODUCT
+UNION ALL
+SELECT 'FACT_SALES' AS TABLE_NAME,
+        COUNT(*) AS RECORD_COUNT
+FROM FACT_SALES
+UNION ALL
+SELECT 'FACT_MONTHLY_INVENTORY' AS TABLE_NAME,
+        COUNT(*) AS RECORD_COUNT
+FROM FACT_MONTHLY_INVENTORY
+UNION ALL
+SELECT 'FACT_PROMOTION_COVERAGE' AS TABLE_NAME,
+        COUNT(*) AS RECORD_COUNT
+FROM FACT_PROMOTION_COVERAGE;
